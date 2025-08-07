@@ -1,5 +1,4 @@
 from celery import shared_task
-
 from notification_service import settings
 from .models import Notification, DeliveryAttempt
 from .utils.email_sender import send_email
@@ -12,6 +11,7 @@ def send_notification(notification_id):
     notification = Notification.objects.get(id=notification_id)
     user = notification.user
 
+    # Select enabled channels
     channels = [
         name for name, enabled in [
             ('email', settings.SMTP_ENABLED),
@@ -21,10 +21,9 @@ def send_notification(notification_id):
     ]
 
     for channel in channels:
+        # Attempt to send notification via each channel
         success = False
         error = ""
-        print(f"Sending notification via {channel}...")
-
         try:
             if channel == 'email' and user.email:
                 success = send_email(user.email, notification.title, notification.message)
@@ -35,6 +34,7 @@ def send_notification(notification_id):
         except Exception as e:
             error = str(e)
 
+        # Save delivery attempt
         DeliveryAttempt.objects.create(
             notification=notification,
             channel=channel,
@@ -45,4 +45,5 @@ def send_notification(notification_id):
         if success:
             notification.is_sent = True
             notification.save()
-            break  # прекращаем, если одно из уведомлений доставлено
+            # Stop if one channel succeeded
+            break

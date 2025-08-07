@@ -1,10 +1,7 @@
 from rest_framework.viewsets import ModelViewSet
 from .models import Notification
 from .serializers import NotificationSerializer
-from .tasks import send_notification # type: ignore
-from celery.app.task import Task
-
-send_notification: Task
+from .tasks import send_notification
 
 
 class NotificationViewSet(ModelViewSet):
@@ -12,5 +9,7 @@ class NotificationViewSet(ModelViewSet):
     serializer_class = NotificationSerializer
 
     def perform_create(self, serializer):
+        # Create the notification instance
         notification = serializer.save()
+        # Run Celery task
         send_notification.delay(notification.id)

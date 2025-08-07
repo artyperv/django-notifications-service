@@ -13,14 +13,14 @@ def send_email(to_email, subject, message):
     from_email = smtp_user
 
     try:
-        # Создаем сообщение
+        # Create message
         msg = MIMEMultipart()
         msg['From'] = from_email
         msg['To'] = to_email
         msg['Subject'] = subject
         msg.attach(MIMEText(message, 'plain'))
 
-        # Подключение и отправка
+        # Connect and send
         server = smtplib.SMTP(smtp_server, smtp_port)
         server.starttls()
         server.login(smtp_user, smtp_password)
